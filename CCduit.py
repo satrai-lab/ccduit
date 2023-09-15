@@ -304,7 +304,7 @@ def usage():
     Provides the usage information for the CCduit API.
     
     Logic:
-    - Print out information and examples of using the API
+    - Print out information and examples of using the API 
     """
     pass
 
