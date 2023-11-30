@@ -1,29 +1,26 @@
-# CCduit: Pioneering Seamless Data Flow Between Federations Of Smart IoT Communities
+# CCduit-ICSA2024
+Welcome to the anonymized repository for the CCduit implementation, as presented in our paper at ICSA 2024. This repository hosts the source code, data models, and supplementary materials for CCduit, an innovative software overlay architecture designed to enhance interoperability and collaborative data exchange across federated data spaces.
 
-CCduit is an initial blueprint aiming to provide a seamless interface for managing and interacting with IoT federations. It's designed to facilitate registration, management, and engagement between IoT federations and communities within them. **Please note that this code is (for now) a basic outline and not a fully functional system.**
+## Overview
+CCduit is a novel software overlay architecture that addresses the complexities of data sharing, protocol mismatch, and data sovereignty enforcement in federated data spaces. It offers a modular, scalable, and policy-driven approach to facilitate efficient and sovereignty-preserving data exchanges across diverse IoT federations.
 
-## Features (Prototype)
+## Contents
+[Source Code](): The implementation code of the CCduit software overlay.
 
-- **Community Management**: Preliminary functions for registering, updating, removing, and listing communities.
-- **Federation Management**: Basic functionalities for registering, updating, removing, and listing federations.
-- **Community Interaction**: Prototype functions for creating, validating, and monitoring interactions between communities.
-- **Integration API**: Initial design to integrate communities and federations.
-- **Data Model Management**: Basic functionalities for registering, updating, removing, and listing data models and functions for validating and converting them.
+[Data Models](): Standardized NGSI-LD data models allowing for standardized and consistent representations of communities, federations, and their interactions. More about these models can be found in the NGSI-LD Data Models README.
 
-### Data Models
+[Documentation](): Detailed documentation on the architecture, setup, usage and experiments of CCduit.
 
-Our NGSI-LD data models are the cornerstone of CCduit, allowing for standardized and consistent representations of communities, federations, and their interactions. More about these models can be found in the [NGSI-LD Data Models README]().
+[API](): A swagger compatible file showcasing all the different API calls for the interaction and administration APIs
 
-## Getting Started (Development)
+## Getting Started
+Please refer to the [Installation Guide]() for instructions on how to set up and run CCduit in your environment.
 
-1. Clone this repository.
-2. Navigate to the directory and explore the `CCduit.py` Python script. Remember, this is for now a basic outline and not something that runs as a full system.
-3. Refer to the API documentation and the NGSI-LD Data Models README for a deeper understanding.
+## Usage
+Follow the [Usage Guide]() for detailed steps on how to utilize CCduit for federated data exchange and management. A simple example is also 
 
-## Contributing
+## Acknowledgments
+This work is part of the research submitted at ICSA 2024.
 
-Pull requests are welcome. For significant changes, please open an issue first to discuss the desired changes.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
+## Contact
+For any queries or further information, please contact us at REDACTED.
