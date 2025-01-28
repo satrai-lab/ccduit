@@ -1,6 +1,7 @@
 # CCduit Software Overlay Prototype
 
-This README provides comprehensive instructions for setting up and using the 'CCduit' Software Overlay prototype, submitted as an artifact paper for SEAMS 2025. The software allows data space federations to collaborate dynamically, exchange context, and manage interactions effectively. The instructions cover the configuration of multiple federations, communities, data models, functions, and policies, along with steps to run the services required by the tool, how to 'play' with a simple example of a possible interaction, and details to recreate experiments from the paper.
+This README provides comprehensive instructions for setting up and using the 'CCduit' Software Overlay prototype, submitted as an artifact paper for SEAMS 2025 (Adaptive and Interoperable Federated Data Spaces:
+An Implementation Experience). The software allows data space federations to collaborate dynamically, exchange context, and manage interactions effectively. The instructions cover the configuration of multiple federations, communities, data models, functions, and policies, along with steps to run the services required by the tool, how to 'play' with a simple example of a possible interaction, and details to recreate experiments from the paper.
 
 ---
 
