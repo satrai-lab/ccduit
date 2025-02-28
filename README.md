@@ -5,6 +5,12 @@ An Implementation Experience). The software allows data space federations to col
 
 ---
 
+**Repository Description**
+
+This repository serves as the comprehensive source for the CCDUIT project and is organized into **four primary directories.** The `CCDUIT Software` folder contains the **core source code** of the software overlay, while the `Communities` folder is subdivided into four separate folders—each belonging to a distinct federation—to facilitate community setup for experimental and demo purposes. The `Examples/Simple_Interaction` directory includes a demo illustrating the process of initiating a basic interaction between two communities using **CCDUIT**. Finally, the `Experiments` folder compiles all experimental setups necessary to reproduce the performance evaluations and adaptation experiments.
+
+---
+
 ## Table of Contents
 
 - [CCduit Software Overlay Prototype](#redacted-software-overlay-prototype)
