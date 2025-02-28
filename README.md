@@ -46,10 +46,6 @@ This repository serves as the comprehensive source for the CCDUIT project and is
     - [Step 1: Set Up Community2 Endpoint](#step-1-set-up-community2-endpoint)
     - [Step 2: Set Up Community1 Endpoint](#step-2-set-up-community1-endpoint)
     - [Step 3: Create Data Interaction](#step-3-create-data-interaction)
-  - [Running the Second Adaptation Experiment](#running-the-second-adaptation-experiment)
-    - [Experiment Steps](#experiment-steps)
-    - [Expected Results](#expected-results)
-
 ---
 
 ## Prerequisites
@@ -701,6 +697,6 @@ This section describes how **Community1** in **Federation 1** can interact with 
 ---
 
 > [!NOTE]
->**_In order to reproduce all the experiments you should follow the guidince [here]()_**
+>**_To reproduce all the experiments, please follow the guidelines [here](https://github.com/satrai-lab/ccduit/tree/completed_CCDUIT/Experiments)._**
 
 
