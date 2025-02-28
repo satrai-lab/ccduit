@@ -73,6 +73,7 @@ Ensure the following are installed on your system:
 
 **Note:** The instructions contain details to create a **federation of federations** using **four example federations** like in the figure below. All context and details have been simplified for easier understanding and experimentation. All commands (e.g., registrations, interactions) should be executed via the API (`app.py`) of the relevant federation.
 ![Diagram](images/diagram.png)
+
 ---
 
 ## Installation and Configuration
