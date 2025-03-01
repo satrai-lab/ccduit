@@ -4,27 +4,52 @@ In this section, you will find detailed, step-by-step instructions to reproduce 
 ---
 # Table of Contents
 
-2. [Data Interaction Between Communities Experiments](#data-interaction-between-communities-experiments)
-   - [Step 1: Set Up Community1 Endpoint](#step-1-set-up-community1-endpoint)
-   - [Step 2: Set Up Community2 Endpoint](#step-2-set-up-community2-endpoint)
-   - [Step 3: Set Up Community3 Endpoint](#step-3-set-up-community3-endpoint)
-   - [Step 4: Set Up Community4 Endpoint](#step-4-set-up-community4-endpoint)
+1. [Set Up Communities](#set-up-communities)
+   - [Community 1 Endpoint](#set-up-community1-endpoint)
+   - [Community 2 Endpoint](#set-up-community2-endpoint)
+   - [Community 3 Endpoint](#set-up-community3-endpoint)
+   - [Community 4 Endpoint](#set-up-community4-endpoint)
 
-3. [Experiment A: Interaction Latency](#experiment-a-interaction-latency)
-   - [Experiment 1: Community 1 and Community 2 within CCDUIT](#experiment-1-community-1-and-community-2-within-ccduit)
-   - [Experiment 2: Community 2 and Community 1 within CCDUIT](#experiment-2-community-2-and-community-1-within-ccduit)
-   - [Experiment 3: Community 2 and Community 3 within CCDUIT](#experiment-3-community-2-and-community-3-within-ccduit)
-   - [Experiment 4: Community 4 and Community 1 within CCDUIT](#experiment-4-community-4-and-community-1-within-ccduit)
-   - [Experiment 5: Community 2 and Community 3 without CCDUIT](#experiment-5-community-2-and-community-3-without-ccduit)
-   - [Experiment 6: Community 4 and Community 1 without CCDUIT](#experiment-6-community-4-and-community-1-without-ccduit)
+2. [Experiment A: Interaction Latency](#experiment-a-interaction-latency)
+   - [Overview](#overview)
+   - [Expected Output](#expected-output)
+   - **Experiment 1: Community 1 and Community 2 within CCDUIT**
+     - [Startup Delay Output](#startup-delay-output)
+     - [Ongoing Interaction Output](#ongoing-interaction-output)
+     - [How to Run](#how-to-run)
+   - **Experiment 2: Community 2 and Community 1 within CCDUIT**
+     - [Startup Delay Output](#startup-delay-output-1)
+     - [Ongoing Interaction Output](#ongoing-interaction-output-1)
+     - [How to Run](#how-to-run-1)
+   - **Experiment 3: Community 2 and Community 3 within CCDUIT**
+     - [Startup Delay Output](#startup-delay-output-2)
+     - [Ongoing Interaction Output](#ongoing-interaction-output-2)
+     - [How to Run](#how-to-run-2)
+   - **Experiment 4: Community 4 and Community 1 within CCDUIT**
+     - [Startup Delay Output](#startup-delay-output-3)
+     - [Ongoing Interaction Output](#ongoing-interaction-output-3)
+     - [How to Run](#how-to-run-3)
+   - **Experiment 5: Community 2 and Community 3 without CCDUIT**
+     - [Startup Delay Output](#startup-delay-output-4)
+     - [Ongoing Interaction Output](#ongoing-interaction-output-4)
+     - [How to Run](#how-to-run-4)
+   - **Experiment 6: Community 4 and Community 1 without CCDUIT**
+     - [Startup Delay Output](#startup-delay-output-5)
+     - [Ongoing Interaction Output](#ongoing-interaction-output-5)
+     - [How to Run](#how-to-run-5)
 
-5. [Experiment B: Adaptation Experiment](#experiment-b-adaptation-experiment)
-   - [Experiment 1: First Adaptation Experiment](#experiment-1-first-adaptation-experiment)
-   - [Experiment 2: Second Adaptation Experiment](#experiment-2-second-adaptation-experiment)
+3. [Experiment B: Adaptation Experiment](#experiment-b-adaptation-experiment)
+   - **Experiment 1: First Adaptation Experiment**
+     - [Overview](#overview-1)
+     - [Expected Output](#expected-output-1)
+     - [Response Delay Output](#response-delay-output)
+     - [How to Run](#how-to-run-6)
+   - **Experiment 2: Second Adaptation Experiment**
+     - [Overview](#overview-2)
+     - [Experiment Steps](#experiment-steps)
+     - [Expected Results](#expected-results)
+     - [Response Delay Output](#response-delay-output-1)
 
-6. [Running the Second Adaptation Experiment](#running-the-second-adaptation-experiment)
-   - [Experiment Steps](#experiment-steps)
-   - [Expected Results](#expected-results)
 ---
 
 # Set Up Communities
@@ -110,11 +135,11 @@ This experiment demonstrates the interaction between Community 1 and Community 2
 
 ### Startup Delay Output
 
-![Startup Delay Box Plot](path/to/startup_delay_boxplot.png)
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-brick-startup.png)
 
 ### Ongoing Interaction Output
 
-![Ongoing Interaction Box Plot](path/to/ongoing_interaction_boxplot.png)
+![Ongoing Interaction Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-brick.png)
 
 ### How to Run
 ## I. Startup Delay Measurement
@@ -147,6 +172,14 @@ This experiment demonstrates the interaction between Community 1 and Community 2
 This experiment demonstrates the interaction between Community 2 and Community 1. Here’s how the data flow works:
 - **Community 1** generates synthetic occupancy data in **TTL format** and transmits it via **MQTT protocol**.
 - **Community 2** retrieves this data using **CCDUIT** and receives it in **JSON format** over the **HTTP protocol**.
+
+### Startup Delay Output
+
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-ngsild-startup.png)
+
+### Ongoing Interaction Output
+
+![Ongoing Interaction Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-ngsild-within-ccduit.png)
 
 ### How to Run
 ## I. Startup Delay Measurement
@@ -181,6 +214,14 @@ This experiment demonstrates the interaction between Community 2 and Community 3
 - **Community 2** generates synthetic occupancy data in **JSON format** and transmits it via **HTTP protocol**.
 - **Community 3** retrieves this data using **CCDUIT** and receives it in **JSON format** over the **HTTP protocol**.
 
+### Startup Delay Output
+
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-ngsild-within-ccduit-startup.png)
+
+### Ongoing Interaction Output
+
+![Ongoing Interaction Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/nsild-ngsild-within-ccduit.png)
+
 ### How to Run
 ## I. Startup Delay Measurement
 
@@ -214,6 +255,14 @@ This experiment demonstrates the interaction between Community 4 and Community 1
 - **Community 1** generates synthetic occupancy data in **TTL format** and transmits it via **MQTT protocol**.
 - **Community 4** retrieves this data using **CCDUIT** and receives it in **TTL format** over the **MQTT protocol**.
 
+### Startup Delay Output
+
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-brick-startup.png)
+
+### Ongoing Interaction Output
+
+![Ongoing Interaction Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-brick_next_iterations.png)
+
 ### How to Run
 ## I. Startup Delay Measurement
 
@@ -246,6 +295,14 @@ This experiment demonstrates the interaction between Community 2 and Community 3
 - **Community 2** generates synthetic occupancy data in **JSON format** and transmits it via **HTTP protocol**.
 - **Community 3** retrieves this data using **CCDUIT** and receives it in **JSON format** over the **HTTP protocol**.
 
+### Startup Delay Output
+
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-ngsild-without-ccduit-startup.png)
+
+### Ongoing Interaction Output
+
+![Ongoing Interaction Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-nsgild-without-ccduit.png)
+
 ### How to Run
 ## I. Startup Delay Measurement
 
@@ -276,6 +333,14 @@ This experiment demonstrates the interaction between Community 2 and Community 3
 This experiment demonstrates the interaction between Community 4 and Community 1. Here’s how the data flow works:
 - **Community 1** generates synthetic occupancy data in **TTL format** and transmits it via **MQTT protocol**.
 - **Community 4** retrieves this data using **CCDUIT** and receives it in **TTL format** over the **MQTT protocol**.
+
+### Startup Delay Output
+
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-brick-without-ccduit.png)
+
+### Ongoing Interaction Output
+
+![Ongoing Interaction Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-brick-without ccduit.png)
 
 ### How to Run
 ## I. Startup Delay Measurement
@@ -315,7 +380,11 @@ The experiment will be conducted over 100 runs, with each run lasting approximat
 
 ## Expected Output
 - A box plot illustrating the **response delay** over 100 runs.
-- 
+  
+### Response Delay Output
+
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-brick-startup.png)
+
 ### How to Run
 
 1. **Open a terminal** and navigate to the `the script` folder:
@@ -402,3 +471,7 @@ We include instructions and a premade setup to **easily and quickly recreate the
 
 - **`network_delays.xlsx`**: Contains detailed delay data.
 - **`response_time_boxplots.png`**: Visual representation of response times.
+- 
+### Response Delay Output
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/response_time_boxplots.png)
+
