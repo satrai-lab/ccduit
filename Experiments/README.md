@@ -27,9 +27,74 @@ In this section, you will find detailed, step-by-step instructions to reproduce 
    - [Expected Results](#expected-results)
 ---
 
-# Expeiment A: Interaction Latency: Startup Latency and Ongoing Interaction Latency.  
+# Set Up Communities
+
+Before running the experiments, ensure that all community containers are properly configured. To do this, navigate to the `Communities` folder and set up each community individually. This step is crucial for a smooth execution of the experiments.
+move the `Communities` folder:
+
+   ```bash
+   cd ../Communities
+   ```
+
+## Set Up Community1 Endpoint
+
+1. **Open another terminal** and navigate to the `community1_endpoint` folder:
+
+   ```bash
+   cd Coomunities/community1_endpoint
+   ```
+
+2. **Start the Docker container:**
+
+   ```bash
+   docker-compose up -d
+   ```
+   
+## Set Up Community2 Endpoint
+
+1. **Open another terminal** and navigate to the `community1_endpoint` folder:
+
+   ```bash
+   cd Coomunities/community2_endpoint
+   ```
+
+2. **Start the Docker container:**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+## Set Up Community3 Endpoint
+
+1. **Open another terminal** and navigate to the `community1_endpoint` folder:
+
+   ```bash
+   cd Coomunities/community3_endpoint
+   ```
+
+2. **Start the Docker container:**
+
+   ```bash
+   docker-compose up -d
+   ```
+   
+ ## Set Up Community4 Endpoint
+
+1. **Open another terminal** and navigate to the `community1_endpoint` folder:
+
+   ```bash
+   cd Coomunities/community4_endpoint
+   ```
+
+2. **Start the Docker container:**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+# Experiment A: Interaction Latency: Startup Latency and Ongoing Interaction Latency.  
 ## Overview
-This experiment evaluates the data exchange process between Community X and Community Y **within CCDUIT** and **without CCDUIT**, specifically measuring the delay an iteration takes from the moment Community X requests data from Community Y until Community X successfully receives it. The evaluation is conducted across **two phases**:
+This experiment evaluates the data exchange process between Community X and Community Y **within CCDUIT** and **without CCDUIT**, specifically measuring the delay that an iteration takes from the moment Community X requests data from Community Y until Community X successfully receives it. The evaluation is conducted across **two phases**:
 
 1. **Startup Delay Measurement**: The delay of the first iteration over 20 runs.
 2. **Steady-State Interaction**: Data exchange performance in subsequent iterations, executed over 5 runs, with each run comprising approximately 100 iterations.
@@ -42,6 +107,14 @@ This experiment evaluates the data exchange process between Community X and Comm
 This experiment demonstrates the interaction between Community 1 and Community 2. Here’s how the data flow works:
 - **Community 2** generates synthetic occupancy data in **JSON format** and transmits it via **HTTP protocol**.
 - **Community 1** retrieves this data using **CCDUIT** and receives it in **TTL format** over the **MQTT protocol**.
+
+### Startup Delay Output
+
+![Startup Delay Box Plot](path/to/startup_delay_boxplot.png)
+
+### Ongoing Interaction Output
+
+![Ongoing Interaction Box Plot](path/to/ongoing_interaction_boxplot.png)
 
 ### How to Run
 ## I. Startup Delay Measurement
