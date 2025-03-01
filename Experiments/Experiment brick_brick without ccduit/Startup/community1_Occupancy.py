@@ -59,7 +59,7 @@ def main():
     mqtt_client.loop_start()
 
     try:
-        for _ in range(105):  # Run the loop 105 times
+        for _ in range(300):  # Run the loop 105 times
             observation_data = generate_random_data()
             # Convert to Brick TTL format
             ttl_data = convert_to_brick_ttl(observation_data)

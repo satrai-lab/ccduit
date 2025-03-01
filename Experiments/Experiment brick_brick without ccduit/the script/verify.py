@@ -1,72 +1,34 @@
-import os
-import sys
-import subprocess
-import time
-import shutil
-import psutil
-import plot
-# Set up module paths
-
-# Windows flag to suppress new window creation
-
-def run_occupancy_script():
-    """Runs community1_Occupancy.py, prints real-time output, and handles failures."""
-    print("Running community1_Occupancy.py...")
-    
-    occupancy_process = subprocess.Popen(
-        ["python", "community1_Occupancy.py"],
-        # stdout=subprocess.PIPE,
-        # stderr=subprocess.PIPE,
-        text=True,
-        cwd="./"
-    )
-    
-    # # Optionally, you can capture and print output here if needed
-    # for line in occupancy_process.stdout:
-    #     print(f"{line.strip()}")
-    
-    return occupancy_process
-
-def main():
-    print("Running verify.py...")
-    # Launch verify.py without opening a new window
-    verify_process = subprocess.Popen(
-        ["python", "verify.py"],
-        cwd="./"
-    )
-    
-    for i in range(5):  # Run the sequence 20 times
-        print(f"\n🟢 Run {i + 1} - Starting...")
-        # print(f"Working directory: {os.getcwd()}")
+import paho.mqtt.client as mqtt
+import json
+# MQTT Configuration
+mqtt_broker = 'localhost'  # Update with your MQTT broker address
+mqtt_port = 1889  # Update with your MQTT port
+mqtt_topic='community4/occupancy'
+# Callback function to handle messages
+def on_message(client, userdata, message):
+    print(f"Message received on topic {message.topic}:")
+    try:
+        # Decode the payload
+        turtle_data = message.payload.decode('utf-8', errors='ignore').strip()
+        print("Received Turtle Data:")
+        print(turtle_data)  
         
-        # # Launch clean.py without opening a new window
-        # clean_process = subprocess.Popen(
-        #     ["python", "clean.py"],
-        #     cwd="./"
-        # )
-        
-        
-        occupancy_process = run_occupancy_script()
-        occupancy_process.wait()  # Wait for verify.py to complete
-        
-        if os.path.exists("delay.txt"):
-            new_file_path = os.path.join(f"delay_{i+1}.txt")
-            shutil.move("delay.txt", new_file_path)
-            print(f"📂 File moved successfully to {new_file_path}.")
-        else:
-            print("⚠️ delay.txt not found; skipping move.")
+    except UnicodeDecodeError as e:
+        print(f"Decoding error: {e}")
 
-        print(f"🟢 Run {i + 1} - Completed.\n")
-        time.sleep(1)
+# Callback function for connection
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT broker successfully.")
+        client.subscribe(mqtt_topic)  # Subscribe to the topic
+    else:
+        print(f"Connection failed with code {rc}")
 
-    # Terminate verify.py
-    print("🛑 All iterations completed, terminating verify.py...")
-    verify_process.terminate()
-    verify_process.wait()
-    print("✅ verify.py terminated.")
+# Set up MQTT client
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
 
-    # Run the plot function
-    plot.main()
-
-if __name__ == '__main__':
-    main()
+# Connect to the MQTT broker and start listening
+client.connect(mqtt_broker, mqtt_port, 60)
+client.loop_forever()  # Keep the client running to listen for incoming messages

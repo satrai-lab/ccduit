@@ -238,67 +238,7 @@ def validate_forwarding(policy, federationID1, federationID2):
     else:
         return [False]
 
-# def store_policy(policy):
-#     # print(json.dumps(policy))
-#     if policy is None:
-#         print("Policy is None, skipping storage.")
-#         return
-#     if isinstance(policy,str):
-#         policy=json.loads(policy)
-#         # print(policy)
-#     headers = {'Content-Type': 'application/json'}
-#     policy_id = policy.get('id', None)
-#     if policy_id is None:
-#         print("Policy ID is None, cannot store policy.")
-#         return
 
-#     print(f"Processing policy with ID: {policy_id}")
-
-#     # Extract the lastModified timestamp from the incoming policy
-#     incoming_last_modified_str = policy.get('modificationPolicy', {}).get('value', {}).get('lastModified', None)
-#     if incoming_last_modified_str is None:
-#         print("Incoming policy does not have a lastModified timestamp.")
-#         return
-
-#     # Convert incoming lastModified to UTC datetime
-#     try:
-#         incoming_last_modified = datetime.strptime(incoming_last_modified_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-#     except ValueError:
-#         print(f"Invalid lastModified format in incoming policy: {incoming_last_modified_str}")
-#         return
-
-#     try:
-#         # Attempt to retrieve the existing policy from the Context Broker
-#         response = requests.get(f"{CONTEXT_BROKER_URL}/{policy_id}")
-#         if response.status_code == 200:
-#             existing_policy = response.json()
-#             existing_last_modified_str = existing_policy.get('modificationPolicy', {}).get('value', {}).get('lastModified', None)
-
-#             if existing_last_modified_str:
-#                 # Convert existing lastModified to UTC datetime
-#                 try:
-#                     existing_last_modified = datetime.strptime(existing_last_modified_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-#                 except ValueError:
-#                     print(f"Invalid lastModified format in existing policy: {existing_last_modified_str}")
-#                     return
-
-#                 # Compare the timestamps
-#                 if incoming_last_modified > existing_last_modified:
-#                     print(f"Incoming policy is newer. Updating policy {policy_id}.")
-#                     # Delete the existing policy
-#                     delete_response = requests.delete(f"{CONTEXT_BROKER_URL}/{policy_id}")
-#                     delete_response.raise_for_status()
-#                     print(f"Policy {policy_id} deleted successfully.")
-#                 else:
-#                     print(f"Existing policy {policy_id} is up-to-date. No changes made.")
-#                     return
-
-#         # Store the incoming policy
-#         response = requests.post(CONTEXT_BROKER_URL, json=json.dumps(policy), headers=headers)
-#         response.raise_for_status()
-#         print(f"Policy {policy_id} stored successfully.")
-#     except requests.exceptions.RequestException as e:
-#         print(f"Failed to process policy {policy_id}: {e}")
 
 
 def store_policy(policy):

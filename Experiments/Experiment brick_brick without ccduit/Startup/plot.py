@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 def main():
     # Path to the results file where each line is a startup delay for a run.
-    file_path = 'delay.txt'
+    file_path = 'delays.txt'
     
     # Load the text file into a DataFrame.
     # Assuming the file has 20 lines, each representing the delay for one run.
