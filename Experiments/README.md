@@ -254,7 +254,21 @@ This experiment demonstrates the interaction between Community 2 and Community 3
 This experiment demonstrates the interaction between Community 4 and Community 1. Here’s how the data flow works:
 - **Community 1** generates synthetic occupancy data in **TTL format** and transmits it via **MQTT protocol**.
 - **Community 4** retrieves this data using **CCDUIT** and receives it in **TTL format** over the **MQTT protocol**.
-
+> [!NOTE]  
+> **In this experiment, we need to establish collaboration between **Federation1** and **Federation4** to enable data interaction.**  
+> **Federation 1 → Federation 4**
+>
+> **Request Body:**
+>
+> ```json
+> {
+>  "destination_broker": "localhost",
+>  "destination_port": 1887,
+>  "receiver_Fed_ID": "Federation4",
+>  "details": "Federation1 sends Collaboration Request to Federation4",
+>  "policy_ID": "Policy1"
+> }
+> ```
 ### Startup Delay Output
 
 ![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/brick-brick-startup.png)
