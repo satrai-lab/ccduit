@@ -375,6 +375,9 @@ This experiment demonstrates the interaction between Community 4 and Community 1
 ## Overview
 This experiment aims to evaluate the response time of CCDUIT to policy changes. Specifically, if an ongoing data interaction is no longer permitted due to an updated policy, CCDUIT should detect the change and promptly terminate the interaction.
 
+> [!NOTE]  
+> For this experiment, we recommend setting all policies to publicly allow sharing.
+
 ## Execution Process
 The experiment will be conducted over 100 runs, with each run lasting approximately 9 seconds.
 
@@ -383,8 +386,7 @@ The experiment will be conducted over 100 runs, with each run lasting approximat
   
 ### Response Delay Output
 
-![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/ngsild-brick-startup.png)
-
+![Startup Delay Box Plot](https://github.com/satrai-lab/ccduit/blob/CCDUIT_Experiments/Experiments/Images/first%20adaptation.png).
 ### How to Run
 
 1. **Open a terminal** and navigate to the `the script` folder:
