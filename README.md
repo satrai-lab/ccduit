@@ -698,6 +698,6 @@ This section describes how **Community1** in **Federation 1** can interact with 
 ---
 
 > [!NOTE]
->**_To reproduce all the experiments, please follow the guidelines [here](https://github.com/satrai-lab/ccduit/tree/completed_CCDUIT/Experiments)._**
+>**_To reproduce all the experiments, please follow the guidelines [here](https://github.com/satrai-lab/ccduit/tree/CCDUIT_Experiments/Experiments)._**
 
 
