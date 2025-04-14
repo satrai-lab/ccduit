@@ -16,7 +16,6 @@ import requests
 import Context_Management_Service
 import functools
 import Function_Management_Service
-import time
 import psutil
 from datetime import datetime, timedelta
 import hashlib
@@ -24,6 +23,9 @@ import functools
 import paho.mqtt.client as mqtt
 import threading
 import sys
+
+import queue
+message_queue = multiprocessing.Queue()
 
 # sys.path.append(config.FUNCTION_REPOSITORY_PATH)
 import Function_Repository
@@ -35,10 +37,9 @@ context_url="https://raw.githubusercontent.com/NiematKhoder/test/main/Context.js
 headers = {'Content-Type': 'application/ld+json'}
 link_header_value = f'<{json.dumps(context_url).replace(" ", "")}>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
 headersget = {
-            "Accept": "application/ld+json",  # Request JSON-LD format
-            "Link": f'<{context_url}>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
-        }
-
+    "Accept": "application/ld+json",  # Request JSON-LD format
+    "Link": f'<{context_url}>; rel="http://www.w3.org/ns/json-ld#context"; type="application/ld+json"'
+}
 
 
 def monitor_memory_usage(pid):
@@ -134,12 +135,10 @@ def get_Converter_name(function_ID):
         return converter_name
     return None
 
-def convert_data(data, source_model, dest_model):
-    """
-    Convert data from source model to destination model.
-    """
+def find_mapping(source_model, dest_model ):
+    # maping_time=time.perf_counter_ns()
     mapping = Function_Management_Service.check_data_model_mapping(source_model, dest_model)
-    
+    # print(f"mapping time:{(time.perf_counter_ns()-maping_time)/1_000_000}")
     if not mapping:
         print("Mapping doesn't exist. Please provide a mapping")
         #here we should go and ask the fedeartions about the converters
@@ -157,19 +156,29 @@ def convert_data(data, source_model, dest_model):
         if converter_name is None:
             # Handle the None case, e.g., log an error or assign a default value
             print("Error: converter_name is None")
+            return None
         else:
-            if hasattr(Function_Repository, converter_name):
-                converter_func = getattr(Function_Repository, converter_name)
-                if callable(converter_func):
-                    converted_data = converter_func(data)
-                    # print(f"Converted data: {converted_data}")
-                    return converted_data
-                else:
-                    print(f"The attribute '{converter_name}' in Function_Repository is not callable.")
-                    return None
-            else:
-                print(f"Function_Repository has no attribute named '{converter_name}'.")    
-                return None
+            return converter_name
+        
+
+def convert_data(data,converter_name):
+    """
+    Convert data from source model to destination model.
+    """
+    if hasattr(Function_Repository, converter_name):
+        converter_func = getattr(Function_Repository, converter_name)
+        if callable(converter_func):
+            conversion=time.perf_counter_ns()
+            converted_data = converter_func(data)
+            # print(f"conversion time in converter function :{(time.perf_counter_ns()-conversion)/1_000_000}")
+            # print(f"Converted data: {converted_data}")
+            return converted_data
+        else:
+            print(f"The attribute '{converter_name}' in Function_Repository is not callable.")
+            return None
+    else:
+        print(f"Function_Repository has no attribute named '{converter_name}'.")    
+        return None
         
 def compute_data_hash(data):
     """
@@ -178,83 +187,94 @@ def compute_data_hash(data):
     return hashlib.md5(str(data).encode()).hexdigest()
 
 
-def on_message(client, userdata, message, target_data_model, dest_mqtt_client, destpath, destination_protocol, destination_endpoint):
+def log_time(delay_ms,file_name="time_log.txt"):
+    """Logs delay time to a file asynchronously."""
+    try:
+        with open(file_name, 'a') as file:
+            file.write(f"{delay_ms}\n")
+    except Exception as e:
+        print(f"Error writing to file: {e}")
+
+def http_worker(community_context_url, message_queue,startup_time,pid,interaction_id):
+    while True:
+        try:
+            data = message_queue.get()  # This will block until there is data
+            # if data is None:
+            #     break  # Stop the process if None is received (graceful exit)
+
+            headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+
+            try:
+                response =requests.post(community_context_url, json=data["converted_data"], headers=headers)
+                # print(f"posting time {(time.perf_counter_ns() - before_posting) / 1_000_000} ms ")
+                if response.status_code in [200, 201]:
+                    end_time = time.perf_counter_ns()
+                    delay_ms = (end_time - startup_time) / 1_000_000
+                    terminate_Interaction(interaction_id=interaction_id, pidInput=pid)
+                    threading.Thread(target=log_time, args=(delay_ms,"startup_log_brick_ngsild.txt")).start()
+                    print(f"HTTP POST successful to {community_context_url}")
+                    return
+                else:
+                    print(f"HTTP POST failed to {community_context_url}. Status code: {response.status_code}")
+            except Exception as e:
+                print("HTTP request failed:", e)
+
+        except Empty:
+            continue  # Avoid blocking the process indefinitely
+
+def on_message(client, userdata, message, target_data_model, dest_mqtt_client, destpath, destination_protocol, destination_endpoint,
+                same_data_model,converter_name):
     """
     Callback function for handling messages from source MQTT client, converting data if necessary,
     and sending to the destination endpoint (either MQTT or HTTP).
     """
-    start_time=time.time_ns()
-    # print(f"Start time: {time.time_ns()}")
+    start_time1=time.perf_counter_ns()
     
-    # print(f"Received message from topic {message.topic}")
     source_data = message.payload.decode(errors='ignore')
-    # print(f"Raw payload: {source_data}")
-    # # Decode and parse the incoming message
-    # try:
-    #     source_data = json.loads(message.payload.decode())
-    # except json.JSONDecodeError:
-    #     print("Failed to decode JSON message payload.")
-    #     return
-
+    print(source_data)
     # Convert data model if required
-    if userdata['source_data_model'] != target_data_model:
-        # print("Converting data from source model to target model...")
-        converted_data = convert_data(source_data, userdata['source_data_model'], target_data_model)
-        # print(json.dumps(converted_data,indent=2))
+    if not same_data_model:
+        converted_data = convert_data(source_data, converter_name)
         if converted_data is None:
             print("Data conversion failed.")
             return
     else:
         converted_data = source_data
-        # print(destination_protocol.lower())
-        if  isinstance(converted_data, list):
-                convert_data=convert_data[0]
-    # Send to destination based on protocol
+    if  isinstance(converted_data, list):
+                converted_data=converted_data[0]
+                
     if destination_protocol.lower() == "http":
-        print(f"Sending data to HTTP endpoint: {destination_endpoint + destpath}")
-        try:
-            # print(json.dumps(converted_data,indent=2))
-            response = requests.post(destination_endpoint + destpath, json=converted_data)
-            if response.status_code in [200, 201]:
-                end_time=time.time_ns()
-                print(end_time)
-                delay_ms = (end_time - start_time) / 1_000_000
-                with open("interaction_delay_log.txt", "a") as log_file:
-                        log_file.write(f"{delay_ms}\n")
-                        log_file.flush()
-                # print(f"End time: {time.time_ns()}")
-                print("Data successfully sent via HTTP.")
-            else:
-                print(f"End time: {time.time_ns()}")
-                print(f"Failed to send data via HTTP. Status code: {response.status_code}")
-        except Exception as e:
-            print(f"End time: {time.time_ns()}")
-            print(f"HTTP request error: {e}")
+        message_with_timestamp = {
+            "converted_data": converted_data,
+            "timestamp_ns": start_time1
+        }
+        # Put the dictionary in the queue
+        message_queue.put(message_with_timestamp)
 
     elif destination_protocol.lower() == "mqtt" and dest_mqtt_client:
         # print(f"Publishing data to MQTT topic {destpath}")
-        try:
-            result = dest_mqtt_client.publish(destpath, json.dumps(converted_data))
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                end_time=time.time_ns()
-                print(f"end_time: {time.time_ns()}")
-                # delay_ms = (end_time - start_time) / 1_000_000
-                # with open("interaction_delay_log.txt", "a") as log_file:
-                #         log_file.write(f"{delay_ms}\n")
-                #         log_file.flush()
-                with open("ends.txt", "a") as log_file:
-                        log_file.write(f"{end_time}\n")
-                        log_file.flush()
-                print("Data successfully published to MQTT.")
-            else:
-                print(f"End time: {time.time_ns()}")
-                print(f"Failed to publish message, MQTT error code: {result.rc}")
-        except Exception as e:
-            print(f"End time: {time.time_ns()}")
-            print(f"MQTT publishing error: {e}")
+            try:
+                result = dest_mqtt_client.publish(destpath, json.dumps(converted_data))
+                if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                    delay_ms = (time.perf_counter_ns() - start_time1) / 1_000_000  # Convert to milliseconds
+
+                    # Logging in a separate thread
+                    threading.Thread(target=log_time, args=(delay_ms,)).start()
+
+                    print("Data successfully published to MQTT.")
+                else:
+                    print(f"End time: {time.perf_counter_ns()}")
+                    print(f"Failed to publish message, MQTT error code: {result.rc}")
+            except Exception as e:
+                print(f"End time: {time.perf_counter_ns()}")
+                print(f"MQTT publishing error: {e}")
+
 
 def interaction_process(interaction_id, source_community, destination_community, Interaction_Type,
-                        source_data_model, target_data_model, sourcepath, destpath):
+                        source_data_model, target_data_model, sourcepath, destpath,same_data_model,converter_name,startup_time):
     """
     Process the interaction between source and destination communities with real-time status updates.
     """
@@ -265,8 +285,6 @@ def interaction_process(interaction_id, source_community, destination_community,
     destination_endpoint = get_endpoint_url(destination_community)
     source_protocol = get_protocol(source_community)
     destination_protocol = get_protocol(destination_community)
-    # print(f"Source endpoint: {source_endpoint}, Protocol: {source_protocol}")
-    # print(f"Destination endpoint: {destination_endpoint}, Protocol: {destination_protocol}")
 
     # Track interaction status and set processing interval
     interaction_status = "active"
@@ -301,13 +319,18 @@ def interaction_process(interaction_id, source_community, destination_community,
     previous_data_hash = None
     dest_mqtt_client = None
 
+    if source_protocol.lower()=="mqtt" and destination_protocol.lower() == "http":  
+        community_context_url=f"{destination_endpoint}{destpath}"
+        p = multiprocessing.Process(target=http_worker, args=(community_context_url,message_queue,startup_time, os.getpid(),interaction_id),daemon=True)
+        p.start()
+        
     # Destination MQTT setup if applicable
     if destination_protocol.lower() == "mqtt":
         dest_mqtt_client = mqtt.Client()
         host, port = destination_endpoint.split(":")
         dest_mqtt_client.connect(host, int(port), 60)
         dest_mqtt_client.loop_start()
-        # print(f"Destination MQTT client connected to {destination_endpoint}")
+
         
     # If source uses MQTT protocol, set up client and subscribe
     if source_protocol.lower() == "mqtt":
@@ -317,7 +340,9 @@ def interaction_process(interaction_id, source_community, destination_community,
                                                   dest_mqtt_client=dest_mqtt_client, 
                                                   destpath=destpath, 
                                                   destination_protocol=destination_protocol, 
-                                                  destination_endpoint=destination_endpoint)
+                                                  destination_endpoint=destination_endpoint,
+                                                  same_data_model=same_data_model,
+                                                  converter_name=converter_name)
         source_mqtt_client.on_message = customized_on_message
         source_mqtt_address, source_mqtt_port = source_endpoint.split(':')
         source_mqtt_client.connect(source_mqtt_address, int(source_mqtt_port), 60)
@@ -329,21 +354,19 @@ def interaction_process(interaction_id, source_community, destination_community,
     # Main loop for processing data when active
     while True:
         # Only process if active and time interval has passed
-        if processing_active and datetime.now() >= last_fetch_time + timedelta(seconds=2.8):
+        if processing_active and datetime.now() >= last_fetch_time + timedelta(seconds=0.9):
             last_fetch_time = datetime.now()  # Update last fetch time
 
             # Record the start time for this fetch/processing cycle
-            start_time = time.time_ns()
-            print(f"Data fetch start time: {start_time}")
+            start_time = time.perf_counter_ns()
+            
 
             # If source protocol is HTTP, fetch and process data
             if source_protocol.upper() == "HTTP":
                 source_endpoint_with_path = str(source_endpoint) + str(sourcepath)
-                print(f"Fetching data from {source_endpoint_with_path}")
                 response = requests.get(source_endpoint_with_path)
 
                 if response.status_code == 200 and response.content:
-                    print("Data fetched successfully.")
                     source_data = response.json()
                     if isinstance(source_data, list) and source_data:
                         source_data = source_data[0]
@@ -360,9 +383,9 @@ def interaction_process(interaction_id, source_community, destination_community,
                     previous_data_hash = current_data_hash
                     
                     # Convert data if necessary
-                    if source_data_model != target_data_model:
+                    if not same_data_model:
                         print("Converting data between models.")
-                        converted_data = convert_data(source_data, source_data_model, target_data_model)
+                        converted_data = convert_data(source_data, converter_name)
                         if converted_data is None:
                             print("Failed to convert the received data.")
                             continue
@@ -372,45 +395,49 @@ def interaction_process(interaction_id, source_community, destination_community,
                     # Send converted data to the destination based on its protocol
                     
                     if destination_protocol.lower() == "http":
-                        destination_endpoint_with_path = str(destination_endpoint) + str(destpath)
+                        destination_endpoint_with_path=f"{destination_endpoint}{destpath}"
                         print(f"Sending data to HTTP endpoint: {destination_endpoint_with_path}")
-                        # print(converted_data)
-                        if isinstance(converted_data, list) and converted_data:
-                            converted_data = converted_data[0]
-                        response_request = requests.post(destination_endpoint_with_path, json=converted_data)
+                        try:
+                            headers = {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json"
+                            }
 
-                        # Verify if the POST request was successful
-                        if response_request.status_code in [200, 201]:
-                            end_time = time.time_ns()
-                            print("POST request successful.")
-                        else:
-                            end_time = time.time_ns()
-                            print(f"POST request failed with status code: {response_request.status_code}")
+                            response = requests.post(destination_endpoint_with_path, json=converted_data, headers=headers)
+                            if response.status_code in [200, 201]:
+                                delay_ms = (time.perf_counter_ns() - start_time) / 1_000_000
+
+                                # Write to file in a separate thread
+                                threading.Thread(target=log_time, args=(delay_ms,)).start()
+
+                                print("Data successfully sent via HTTP.")
+                            else:
+                                print(f"End time: {time.perf_counter_ns()}")
+                                print(f"Failed to send data via HTTP. Status code: {response.status_code}")
+                        except Exception as e:
+                            print(f"End time: {time.perf_counter_ns()}")
+                            print(f"HTTP request error: {e}")
+                        # send_over_http(destination_endpoint_with_path,converted_data,start_time)
 
                     elif destination_protocol.lower() == "mqtt" and dest_mqtt_client:
-                        try:
-                            converted_data_json = json.dumps(converted_data)
-                            result = dest_mqtt_client.publish(str(destpath), converted_data_json, retain=True)
-                            if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                                end_time = time.time_ns()
-                                print("Data published to MQTT successfully.")
-                            else:
-                                end_time = time.time_ns()
-                                print("Failed to publish message, MQTT error code:", result.rc)
-                        except Exception as e:
-                            end_time = time.time_ns()
-                            print(f"Error publishing to MQTT: {e}")
-
-                    # Calculate delay in milliseconds and print timings
-                    delay_ms = (end_time - start_time) / 1_000_000
-                    with open("interaction_delay_log.txt", "a") as log_file:
-                        log_file.write(f"{delay_ms}\n")
-                        log_file.flush()
+                            try:
+                                result = dest_mqtt_client.publish(destpath, json.dumps(converted_data))
+                                if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                                    delay_ms = (time.perf_counter_ns() - start_time) / 1_000_000  # Convert to milliseconds
+                                    
+                                    # Logging in a separate thread
+                                    threading.Thread(target=log_time, args=(delay_ms,)).start()
+                        
+                                    print("Data successfully published to MQTT.")
+                                else:
+                                    print(f"End time: {time.perf_counter_ns()}")
+                                    print(f"Failed to publish message, MQTT error code: {result.rc}")
+                            except Exception as e:
+                                print(f"End time: {time.perf_counter_ns()}")
+                                print(f"MQTT publishing error: {e}")
+                        # publish_to_mqtt(dest_mqtt_client, str(destpath), converted_data, start_time)
                 else:
                     print(f"Failed to fetch data from {source_endpoint_with_path}. Status code: {response.status_code}")
-        
-        # Sleep briefly to reduce CPU usage while waiting for the next check or status change
-        time.sleep(1)
 
 
 def fetch_policy_by_provider_federation(provider_federation_id):
@@ -495,7 +522,7 @@ def validate_Interaction(interaction_entity,federation_id):
         print("Interaction validation succeeded!")
         return True,policy
 
-    
+
 def validate_Recieving(policy, federationID):
     # Access the sharing rules and permitted context types from the policy
     sharing_rules = policy.get("sharingRules", {}).get("value", [])
@@ -534,13 +561,15 @@ def validate_Recieving(policy, federationID):
     else:
         # print(f"[validate_Recieving] Federation {federationID} cannot receive. Returning False.")
         return False, permitted_context_types
+
+
 def fetch_request_by_federation_sender(federation_id):
     """
     Fetch collaboration responses where the given federation is the receiver.
     """
     try:
         url = (
-            f"{CONTEXT_BROKER_URL}?type=CollaborationRequest"
+            f"{context_broker_url}?type=CollaborationRequest"
             f"&q=status==active&q=sender==%22{federation_id}%22"
             f"&attrs=senderAddress&options=keyValues"
         )
@@ -558,16 +587,17 @@ def fetch_response_by_federation_sender(federation_id):
     """
     try:
         url = (
-                        f"{CONTEXT_BROKER_URL}?type=CollaborationResponse"
-                        f"&q=responseStatus==ok&q=sender==%22{federation_id}%22"
-                        f"&attrs=senderAddress&options=keyValues"
-                    )
+            f"{context_broker_url}?type=CollaborationResponse"
+            f"&q=responseStatus==ok&q=sender==%22{federation_id}%22"
+            f"&attrs=senderAddress&options=keyValues"
+        )
         response = requests.get(url, headers={"Content-Type": "application/json"})
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching response for federation receiver: {e}")
         return None
+
 
 # monitor_Interaction function that utilizes validate_Recieving
 def monitor_Interaction(interaction_id, Federation_ID, existing_policy, pid):
@@ -576,12 +606,11 @@ def monitor_Interaction(interaction_id, Federation_ID, existing_policy, pid):
     broker_info=fetch_request_by_federation_sender(provider_federation)[0].get("senderAddress")
     if not broker_info:
         broker_info=fetch_response_by_federation_sender(provider_federation)[0].get("senderAddress")
-    broker_info = config.DESTINATION_POLICY_ADRESS_MAP.get(provider_federation)
     if not broker_info:
         print(f"[monitor_Interaction] No broker information found for Federation_ID: {Federation_ID}")
         return
-
-    broker_address, broker_port = broker_info.split(",")
+    print(f"broker_info: {broker_info}")
+    broker_address, broker_port = broker_info.split(":")
     broker_port = int(broker_port)
     topic = f"Federation/{provider_federation}/Policy/{policy_ID}"
 
@@ -619,7 +648,7 @@ def monitor_Interaction(interaction_id, Federation_ID, existing_policy, pid):
             if not canReceive:
                 print(f"[on_message] Terminating interaction {interaction_id} due to policy restrictions.")
                 terminate_Interaction(interaction_id=interaction_id, pidInput=pid)
-                # print(f"terminated time: {time.time_ns()}")
+                # print(f"terminated time: {time.perf_counter_ns()}")
                 os.kill(os.getpid(), signal.SIGTERM)
 
     client.on_message = on_message
@@ -651,11 +680,11 @@ def create_Interaction(initiated_By, from_community, towards,Interaction_Type, I
     # Spawn a process to monitor the current process (create_Interaction itself)
     # current_process_monitoring = multiprocessing.Process(target=monitor_memory_usage, args=(os.getpid()))
     # current_process_monitoring.start()
-    print(f"startup time: {time.time_ns()}")
-    startup_time=time.time_ns()
-    with open("startups.txt", "a") as log_file:
-                        log_file.write(f"{startup_time}\n")
-                        log_file.flush()
+    # print(f"startup time: {time.perf_counter_ns()}")
+    startup_time=time.perf_counter_ns()
+    # with open("startups.txt", "a") as log_file:
+    #                     log_file.write(f"{startup_time}\n")
+    #                     log_file.flush()
     
     unique_id = str(uuid.uuid4())[:8]  # Taking the first 8 characters for brevity
 
@@ -693,16 +722,21 @@ def create_Interaction(initiated_By, from_community, towards,Interaction_Type, I
     if not valide:
         print("Interaction validation failed!")
         return
-    
-    
+    same_data_model=True
+    converter_name=None
+    if source_data_model != target_data_model :
+        same_data_model=False
+        converter_name= find_mapping(source_data_model,target_data_model)
+        if converter_name is None:
+            return
     
     # print("\n")
     # print("process about to start")
     # Spawn a new process for the interaction based on its type
-    process = multiprocessing.Process(target=interaction_process, args=(interaction_id,from_community,towards,Interaction_Type,source_data_model,target_data_model,sourcepath,destpath))
+    process = multiprocessing.Process(target=interaction_process, args=(interaction_id,from_community,towards,Interaction_Type,source_data_model,target_data_model,sourcepath,destpath,same_data_model,converter_name,startup_time))
 
     process.start()
-    
+        
     monitor_processing=multiprocessing.Process(target=monitor_Interaction, args=(interaction_id,config.FEDERATION_ID,policy,process.pid))
     monitor_processing.start()
     
@@ -743,14 +777,15 @@ def create_Interaction(initiated_By, from_community, towards,Interaction_Type, I
         update_response = requests.patch(patch_url, headers=headers,params=params, data=json.dumps(federation_entity))
         update_response.raise_for_status()
         # print(f"Federation {federation_id} updated successfully with Interaction {interaction_id}")
-        return interaction_id
+        return interaction_id,process.pid
     
     except requests.exceptions.RequestException as e:
         print(f"Error registering Interaction: {e}")
         # Print the detailed error response for debugging
         if e.response is not None:
             print(f"Response content: {e.response.content}")
-        return None
+        return None,None
+    return interaction_id, process.pid
 
 def get_interaction_by_id(interaction_id):
     
@@ -863,11 +898,7 @@ def terminate_Interaction(interaction_id,pidInput=None):
     # Terminate the process
     try:
         os.kill(pid, signal.SIGTERM)  # Sends the SIGTERM signal to the process
-        terminated_time=time.time_ns()
-        print(f"terminated time: {terminated_time}")
-        with open("terminated_time_logtest.txt", "a") as log_file:
-            log_file.write(f"{terminated_time}\n")
-            log_file.flush()
+        terminated_time=time.perf_counter_ns()
         remove_Interaction(interaction_id)
         return True 
     except ProcessLookupError:
@@ -931,3 +962,9 @@ def remove_Interaction(interaction_id):
     except requests.exceptions.RequestException as e:
         print(f"Error deleting Interaction: {e}")
 
+# if __name__ == "__main__":
+#     interaction_id, pid = create_Interaction(
+#             "Federation2", "Community1", "Community2", "community", "active",
+#             "Brick", "NGSI-LD", "community1/occupancy","" 
+#         )
+#     print(f"Interaction created with ID: {interaction_id} and PID: {pid}")

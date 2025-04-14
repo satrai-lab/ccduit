@@ -1,0 +1,48 @@
+{
+  "id": "urn:ngsi-ld:ContextPolicy:Policy4",
+  "type": "ContextPolicy",
+  "name": {
+    "type": "Property",
+    "value": "Policy4"
+  },
+  "description": {
+    "type": "Property",
+    "value": "This policy allows sharing and forwarding data publicly."
+  },
+  "providerFederation": {
+    "type": "Relationship",
+    "object": "Federation4"
+  },
+  "permittedContextTypes": {
+    "type": "Property",
+    "value": [
+      "community",
+      "federation",
+      "policies",
+      "functions",
+      "datamodels"
+    ]
+  },
+  "sharingRules": {
+    "type": "Property",
+    "value": [
+      {
+        "public": {
+          "canReceive": true,
+          "canForward": true
+        }
+      }
+    ]
+  },
+  "modificationPolicy": {
+    "type": "Property",
+    "value": {
+      "lastModified": "2025-01-30T14:36:33Z",
+      "modifiedBy": ""
+    }
+  },
+  "Geographic_Restrictions": {
+    "type": "Property",
+    "value": []
+  }
+}
